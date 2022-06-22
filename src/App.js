@@ -22,14 +22,37 @@ const inicialColumns = [
     id: "456",
     items: [],
   },
+  {
+    name: "Done",
+    id: "789",
+    items: [],
+  },
 ];
 
 function App() {
   const [columns, setColumns] = useState(inicialColumns);
 
   const onDragEnd = (result) => {
-    var sourceColumnItems = columns[0].items;
+    console.log(result);
+    // var sourceColumnItems = columns[0].items;
+    var sourceColumnItems = [];
+    var destinationColumnItems = [];
     var draggedItem = {};
+
+    var sourceColumnId = 0;
+    var destinationColumnId = 0;
+
+    for (var i in columns) {
+      if (columns[i].id == result.source.droppableId) {
+        sourceColumnItems = columns[i].items;
+        sourceColumnId = i;
+      } else if (columns[i].id == result.destination.droppableId) {
+        destinationColumnItems = columns[i].items;
+        destinationColumnId = i;
+      }
+    }
+    // console.log(sourceColumnItems)
+    // console.log(destinationColumnItems)
 
     for (var i in sourceColumnItems) {
       if (sourceColumnItems[i].id == result.draggableId) {
@@ -37,32 +60,35 @@ function App() {
       }
     }
     // Excluí o objeto arrastado.
-    var filteredSourceColumnItems = sourceColumnItems.filter(
-      (item) => item.id != result.draggableId
-    );
+    var filteredSourceColumnItems = sourceColumnItems.filter((item) => item.id != result.draggableId);
 
     // Adicionar o mesmo na nova posição.
-    filteredSourceColumnItems.splice(result.destination.index, 0, draggedItem);
-    console.log(filteredSourceColumnItems);
+    if (result.source.droppableId == result.destination.droppableId) {
+      filteredSourceColumnItems.splice(result.destination.index, 0, draggedItem);
 
-    // Mudar o state
-    var columnsCopy = JSON.parse(JSON.stringify(columns));
-    columnsCopy[0].items = filteredSourceColumnItems;
-    setColumns(columnsCopy);
+      // Mudar o state
+      var columnsCopy = JSON.parse(JSON.stringify(columns));
+      columnsCopy[sourceColumnId].items = filteredSourceColumnItems;
+      setColumns(columnsCopy);
+    } else {
+      destinationColumnItems.splice(result.destination.index, 0, draggedItem);
+      // Mudar o state
+      var columnsCopy = JSON.parse(JSON.stringify(columns));
+      columnsCopy[sourceColumnId].items = filteredSourceColumnItems;
+      columnsCopy[destinationColumnId].items = destinationColumnItems;
+      setColumns(columnsCopy);
+    }
   };
 
   return (
     <div style={{ display: "flex", justifyContent: "center" }}>
       <DragDropContext onDragEnd={onDragEnd}>
         {columns.map((column) => (
-          <div style={{ display: "flex", flexDirection:"column", alignItems:"center" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <h1>{column.name}</h1>
             <Droppable droppableId={column.id} key={column.id}>
               {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  style={{ backgroundColor: "lightblue", width: 250, height: 500, padding: 10, margin: 10 }}
-                >
+                <div ref={provided.innerRef} style={{ backgroundColor: "lightblue", width: 250, height: 500, padding: 10, margin: 10 }}>
                   {column.items.map((item, index) => (
                     <Draggable draggableId={item.id} index={index} key={item.id}>
                       {(provided) => (
